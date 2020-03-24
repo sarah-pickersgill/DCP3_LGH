@@ -1461,7 +1461,15 @@ shinyServer(function(input, output) {
 
   # analysis
   result.user.lic.sum <-  reactive({
-    result.user.lic() %>% 
+    result.user.lic2 <- result.user.lic()
+    result.user.lic2$Platform <- fct_relevel(result.user.lic2$Platform,
+                                             "Population based",
+                                             "Community",
+                                             "Health center",
+                                             "First-level hospital",
+                                             "Referral and speacialty hospitals")
+    
+    result.user.lic2 %>% 
       filter(is.na(Intervention) == F) %>% 
       group_by(Platform) %>% 
       summarise(increment_cost_platform = signif(sum(increment_cost, na.rm = T)/1000000000, digits = 2),
@@ -1474,8 +1482,18 @@ shinyServer(function(input, output) {
   
   # Summary table by platform
   result.user.lmic.sum <-  reactive({
-    result.user.lmic() %>% 
-      #fct_explicit_na(Platform) %>% 
+    
+    result.user.lmic2 <- result.user.lmic()
+    result.user.lmic2$Platform <- fct_relevel(result.user.lmic2$Platform,
+                                              "Population based",
+                                              "Community",
+                                              "Health center",
+                                              "First-level hospital",
+                                              "Referral and speacialty hospitals"
+                                                 )
+    
+    
+    result.user.lmic2 %>% 
       group_by(Platform) %>% 
       summarise(increment_cost_platform = signif(sum(increment_cost, na.rm = T)/1000000000, digits = 2),
                 diff_cost_platform = signif(sum(diff_cost, na.rm = T)/1000000000, digits = 2)) %>% 
@@ -1508,7 +1526,17 @@ shinyServer(function(input, output) {
   # Senario analysis: figure ----
   output$result.figure1 <- renderPlot({
     
-    f1 <- ggplot(subset(result.user.lic.sum(), Platform != "NA"), 
+    result.user.lic.sum2 <- subset(result.user.lic.sum(), Platform != "NA")
+    #Platform: level change
+    result.user.lic.sum2$Platform <- fct_relevel(result.user.lic.sum2$Platform,
+                                                            "Referral and speacialty hospitals",
+                                                            "First-level hospital",
+                                                            "Health center",
+                                                            "Community",
+                                                            "Population based")
+    
+    
+    f1 <- ggplot(result.user.lic.sum2, 
                  aes(y = Diff_LIC, x = Platform)) + 
       coord_flip() + 
       geom_bar(stat = "identity", position = "identity", width = 0.525) +
@@ -1517,7 +1545,17 @@ shinyServer(function(input, output) {
       ylab("Difference from the default setting in LICs (US$, billions)") +
       xlab("") 
     
-    f2 <- ggplot(subset(result.user.lmic.sum(), Platform != "NA"), aes(y = Diff_LMIC, x = Platform)) + 
+    
+    result.user.lmic.sum2 <- subset(result.user.lmic.sum(), Platform != "NA")
+    #Platform: level change
+    result.user.lmic.sum2$Platform <- fct_relevel(result.user.lmic.sum2$Platform,
+                                                 "Referral and speacialty hospitals",
+                                                 "First-level hospital",
+                                                 "Health center",
+                                                 "Community",
+                                                 "Population based")
+    
+    f2 <- ggplot(result.user.lmic.sum2, aes(y = Diff_LMIC, x = Platform)) + 
       coord_flip() + 
       geom_bar(stat = "identity", position = "identity", width = 0.525) +
       theme(legend.position="top", axis.text.x = element_text(angle = 0, hjust = 0.5, vjust = 0.5, size = 10)) +
